@@ -1,0 +1,373 @@
+---------------------------
+---------- IOCLA ----------
+----- Tema 2. Stegano -----
+---------------------------
+
+Cuprins:
+	1. Sectiunea .rodata............................Linia  35
+	2. Functii auxiliare............................Linia  48
+		2.1. Functia 'apply_key'....................Linia  57
+		2.2. Functia 'find_word'....................Linia  73
+		2.3. Functia 'print_line'...................Linia  98
+		2.4. Functia 'write_message'................Linia 115
+		2.5. Functia 'calculate_key'................Linia 139
+		2.6. Functia 'translate'....................Linia 152
+		2.7. Functia 'calculate_avg'................Linia 165
+	3. Functii principale...........................Linia 190
+		3.1. Functia 'bruteforce_singlebyte_xor'....Linia 196
+		3.2. Functia 'morse_encrypt'................Linia 219
+		3.3. Functia 'lsb_encode'...................Linia 244
+		3.4. Functia 'lsb_decode'...................Linia 266
+		3.5. Functia 'blur'.........................Linia 287
+	4. Task-uri.....................................Linia 309
+		4.1. Task-ul 1..............................Linia 314
+		4.2. Task-ul 2..............................Linia 325
+		4.3. Task-ul 3..............................Linia 336
+		4.4. Task-ul 4..............................Linia 344
+		4.5. Task-ul 5..............................Linia 352
+		4.6. Task-ul 6..............................Linia 360
+	5. Alte precizari...............................Linia 366
+
+=== ==================== ===
+=== 1. Sectiunea .rodata ===
+=== ==================== ===
+	In aceasta sectiune sunt declarate string-uri ce ajuta la implementare
+		'searched_word'
+			Cuvantul dupa care se cauta cheia de encodare a unei imagini
+			(Task-ul 1)
+		'my_message'
+			Mesajul ce trebuie scris in imagine (Task-ul 2)
+		'morse_#'
+			Conversia in codul morse, pe baza conventiei din cerinta, pentru
+			caracterele [A-Z], pentru spatiu si pentru virgula (Task-ul 3)
+
+=== ==================== ===
+=== 2. Functii auxiliare ===
+=== ==================== ===
+	Functii ce ajuta la implementare, ele fiind apelate (o data sau de mai
+	multe ori) in cadrul functiilor principale sau in cadrul task-urilor.
+
+	In continutul ce urmeaza, daca rezultatul de return al unei functii nu este
+	precizat, inseamna ca nu este folosit in implementare.
+
+--- ------------------------ ---
+--- 2.1. Functia 'apply_key' ---
+--- ------------------------ ---
+	Parametri:
+		O imagine
+		O cheie de encodare
+
+	Sumar:
+		Functia trece prin fiecare byte al imaginii si aplica xor intre acesta
+		si cheia primita
+
+	Prodecura:
+		- Se itereaza de la indexul 0 pana la (inaltime*latime - 1) pentru a
+		trece prin toti octetii imaginii
+		- Pentru fiecare octet, se aplica xor intre acesta si cheia primita
+
+--- ------------------------ ---
+--- 2.2. Functia 'find_word' ---
+--- ------------------------ ---
+	Parametri:
+		O imagine
+		Un string
+
+	Sumar:
+		Functia cauta in imaginea primita un cuvant primit ca parametru pentru
+		a afla linia pe care acesta se afla
+
+	Procedura:
+		- Se itereaza prin fiecare byte al imaginii
+		- Pentru fiecare byte, se compara daca acesta coincide cu primul
+		caracter al string-ului primit
+		- In caz afirmativ, se compara urmatorul byte cu urmatorul caracter
+		din string pana se strica secventa de caractere ce coincid sau se
+		gaseste cuvantul intreg
+		- Daca se gaseste cuvantul, se salveaza linia pe care acesta a fost
+		gasit
+
+	Return:
+		In cazul in care cuvantul nu a fost gasit, se returneaza -1
+		In caz contrar, se returneaza linia pe care a fost gasit.
+
+--- ------------------------- ---
+--- 2.3. Functia 'print_line' ---
+--- ------------------------- ---
+	Parametri:
+		O imagine
+		O linie
+
+	Sumar:
+		Functia printeaza string-ul aflat in imagine la inceputul liniei
+		primite ca parametru
+
+	Procedura:
+		- Se itereaza prin fiecare byte incepand de la capatul liniei primite
+		ca paramtru si se printeaza (intre 2 bytes e o distanta de 4 bytes,
+		deci o idee precum 'PRINT_STRING' sau 'puts' nu ar fi fost de folos)
+		- Iteratia se opreste imediat inaintea printarii unui NULL character
+
+--- ---------------------------- ---
+--- 2.4. Functia 'write_message' ---
+--- ---------------------------- ---
+	Parametri:
+		O imagine
+		Un mesaj
+		Un pixel de start
+		O valoare de adevar
+
+	Sumar:
+		Functia scrie in imagine mesajul primit incepand de la offset-ul dorit.
+
+	Proecudra:
+		- Se itereaza prin fiecare caracter al mesajului primit si se scrie,
+		incepand de la pixel-ul primit ca parametru, pe fiecare pixel, cate
+		un caracter.
+		- Iteratia se opreste la intalnirea unui NULL character
+		- Daca valoarea de adevar primita ca parametru este setata, atunci
+		in imagine se scrie si caracterul NULL
+
+	Return:
+		- Indexul pixel-ului imediat urmator ultimul pixel modificat (pentru
+		eventuale scrieri ulteriorare)
+
+--- ---------------------------- ---
+--- 2.5. Functia 'calculate_key' ---
+--- ---------------------------- ---
+	Parametri:
+		O cheie de encodare
+
+	Sumar:
+		Functia aplica operatiile aritmetice mentionate in cerinta pentru a
+		calcula o noua cheie de encodare
+
+	Return:
+		Noua cheie de encodare astfel calculata
+
+--- ------------------------ ---
+--- 2.6. Functia 'translate' ---
+--- ------------------------ ---
+	Parametri:
+		Un caracter
+
+	Sumar:
+		Functia gaseste adresa unui string din .rodata asociat caracterului
+		primit ca parametru
+
+	Return:
+		Adresa string-ului astfel asociat
+
+--- ---------------------------- ---
+--- 2.7. Functia 'calculate_avg' ---
+--- ---------------------------- ---
+	Parametri:
+		O imagine
+		O linie
+		O coloana
+
+	Sumar:
+		Functia calculeaza media artimetica a byte-ului reprezentat de
+		indecsii primiti ca parametri si vecinilor lui
+
+	Procedura:
+		- Se calculeaza indexul byte-ului fata de inceputul imaginii, dupa care
+		acesta se adauga la suma
+		- Vecinii din stanga si din dreapta sunt la o distanta de 4 bytes fata
+		de indexul actual
+		- Vecinii de sus si de jos sunt la o distanta egala cu latimea imaginii
+		fata de indexul actual
+		- Acesti 4 vecini antepusi se adauga la suma
+		- Se calculeaza media
+
+	Return:
+		Media valorilor mentionate astfel calculata
+
+=== ===================== ===
+=== 3. Functii principale ===
+=== ===================== ===
+	Aceste functii au in principiu implementari aparte, conform task-urilor
+	cerintei.
+
+--- ---------------------------------------- ---
+--- 3.1. Functia 'bruteforce_singlebyte_xor' ---
+--- ---------------------------------------- ---
+	Parametri:
+		O imagine
+
+	Sumar:
+		Functia incearca pe rand cate o cheie pe care o aplica asupra imaginii
+		in incercarea de a gasi un mesaj ascuns
+
+	Procedura:
+		- Se itereaza prin fiecare cheie posibila [0, 127], dupa care aceasta
+		se aplica asupra imaginii
+		- Se cauta in imagine mesajul ce contine cuvantul 'searched_word' din
+		.rodata
+		- Se aplica din nou aceeasi cheie pentru restaurarea imaginii
+		- In cazul in care cuvantul nu a fost gasit, se incearca o noua cheie
+		- In caz contrar, se salveaza cheia si linia prin care a fost gasit si
+		se incheie executia functiei
+
+	Return:
+		Cheia prin care s-a gasit mesajul si linia aferenta lui
+
+--- ---------------------------- ---
+--- 3.2. Functia 'morse_encrypt' ---
+--- ---------------------------- ---
+	Parametri:
+		O imagine
+		Un mesaj
+		Un pixel de start
+
+	Sumar:
+		Functia traduce cate un caracter din mesaj in cod morse dupa care il
+		scrie in mod corespunzator in imagine incepand de la pixel-ul primit
+		ca parametru
+
+	Procedura:
+		- In cazul in care nu se scrie primul caracter din mesaj, se scrie
+		in primul rand un caracter spatiu (pentru despartirea literelor)
+		- Se itereaza prin fiecare caracter al mesajului. Acesta se traduce
+		in cod morse prin 'translate', functie al carei rezultat este pasat
+		lui 'write_message'.
+		- 'write_message' este apelat cu un pixel de start. Acesta este schimbat
+		in valoarea returnata de functie pentru scrieri ulterioare
+		- Iteratia se opreste la intalnirea unui caracter NULL (intrucat acesta
+		nu are un corespondent in cod morse)
+		- Se adauga separat un caracter NULL pe pozitia pe care s-a ajuns
+
+--- -------------------------- ---
+--- 3.3. Functial 'lsb_encode' ---
+--- -------------------------- ---
+	Parametri:
+		O imagine
+		Un mesaj
+		Un pixel de start
+
+	Sumar:
+		Functia imparte in biti fiecare caracter din mesajul primit dupa care
+		salveaza cate un bit pe pixel (incepand de la cel de start) in mod
+		aferent cerintei
+
+	Procedura:
+		- Se itereaza prin fiecare caracter al mesajului primit ca parametur
+		- Se obtine prin shift-ari la stanga cate un bit al acestui caracter
+		- Se aplica operatia aferenta (or 1 sau and ~1) pentru a seta LSB-ul
+		pixel-ului curent la bit-ul astfel obtinut (aceasta operatie se
+		aplica pe 8 pixeli pentru fiecare bit al octetului)
+		- Iteratia se incheie dupa ce s-au aplicat pasii antepusi asupra
+		caracterului NULL
+
+--- ------------------------- ---
+--- 3.4. Functia 'lsb_decode' ---
+--- ------------------------- ---
+	Parametri:
+		O imagine
+		Un pixel de start
+
+	Sumar:
+		Functia extrage din fiecare pixel (incepand de la cel de start) LSB-ul
+		acestuia. Acestia se grupeaza cate 8 in cate un caracter, care este
+		printat
+
+	Procedura:
+		- Se itereaza prin fiecare pixel incepand de la cel de start
+		- Se extrage LSB-ul acestuia care este salvat prin shift-are la dreapta
+		- LSB-urile urmatorilor pixeli sunt "concatenati" la cel din urma,
+		prin shift-ari la stanga asupra registrului in care se salveaza
+		- Dupa 8 astfel de extractii, s-a format un caracter, care este printat
+		- Iteratia se incheie in momentul in care urmeaza a se printa un
+		caracter NULL
+
+--- ------------------- ---
+--- 3.5. Functia 'blur' ---
+--- ------------------- ---
+	Parametri:
+		O imagine
+
+	Sumar:
+		Functia trece prima data prin imagine (fara marginea acesteia),
+		calculand pentru fiecare pixel media formata din acesta si vecinii
+		lui, salvand rezultatul pe stiva.
+		Functia trece a doua oara in sens invers fata de cel precedent pentru
+		a scrie rezultatele de pe stiva pe pozitiile aferente din imagine.
+
+	Procedura:
+		- Pentru fiecare pixel din "interiorul" imaginii (fara margine) se
+		apeleaza 'calculate_avg' asupra lui, functie al carei rezultat este
+		salvat pe stiva
+		- Dupa ce s-a trecut in acest fel o data prin imagine, se itereaza
+		tot in interiorul ei dar in sens invers pentru a lua in ordinea
+		corespunzatoare rezultatele de pe stiva si a le salva in pixel-ul
+		aferent
+
+=== =========== ===
+=== 4. Task-uri ===
+=== =========== ===
+	Detalii despre constructia fiecarui task
+
+--- -------------- ---
+--- 4.1. Task-ul 1 ---
+--- -------------- ---
+	- Se apeleaza 'bruteforce_singlebyte_xor' asupra imaginii
+	- Se salveaza pe stiva linia si cheia astfel obtinute (pentru uz ulterior)
+	- Se aplica cheia asupra imaginii pentru ca aceasta sa fie tradusa
+	- Se afiseaza text-ul de pe linia din imaginea tradusa corespunzatoare
+	liniei obtinute anterior
+	- Se aplica din nou cheia asupra imaginii pentru a o restaura
+	- Se afiseaza conform cerintei cheia si linia (indexul)
+
+--- -------------- ---
+--- 4.2. Task-ul 2 ---
+--- -------------- ---
+	- Se apeleaza 'bruteforce_singlebyte_xor' asupra imaginii
+	- Se salveaza pe stiva linia si cheia astfel obtinute (pentru uz ulterior)
+	- Se aplica cheia asupra imaginii pentru ca aceasta sa fie tradusa
+	- Se scrie 'my_message' pe linia imediat urmatoare celei obtinute anterior
+	- Se calculeaza o noua cheie bazata pe cea deja gasita
+	- Se aplica aceasta noua cheie asupra imaginii pentru a o codifica
+	- Se afiseaza imaginea astfel modificata
+
+--- -------------- ---
+--- 4.3. Task-ul 3 ---
+--- -------------- ---
+	- Se obtin argumentele "mesaj" si "byte_id" din linia de comanda
+	- Se incarca pe stiva argumentele antepuse alaturi de imagine pentru a se
+	apela functia 'morse_encrypt'
+	- Se afiseaza imaginea astfel modificata
+
+--- -------------- ---
+--- 4.4. Task-ul 4 ---
+--- -------------- ---
+	- Se obtin argumentele "mesaj" si "byte_id" din linia de comanda
+	- Se incarca pe stiva argumentele antepuse alaturi de imagine pentru a se
+	apela functia 'lsb_encode'
+	- Se afiseaza imaginea astfel modificata
+
+--- -------------- ---
+--- 4.5. Task-ul 5 ---
+--- -------------- ---
+	- Se obtine argumentul "byte_id" din linia de comanda
+	- Se incarca pe stiva argumentul antepus alaturi de imagine pentru a se
+	apela functia 'lsb_decode'
+	- De afisarea mesajului se ocupa functia precizata
+
+--- -------------- ---
+--- 4.6. Task-ul 6 ---
+--- -------------- ---
+	- Se apeleaza functia 'blur' asupra imaginii
+	- Se afiseaza imaginea astfel modificata
+
+=== ================= ===
+=== 5. Alte precizari ===
+=== ================= ===
+	- Am ales sa salvez pentru task-ul 1 cuvantul 'revient' si pentru task-ul
+	2 mesajul aferent in .rodata pentru a evita hardcodarea acestora in cadrul
+	implementarii (Precum cautarea caracterului 'r' pentru indexul 0 etc.)
+	- Am ales sa salvez pentru task-ul 3 traducerile in cod morse sub forma de
+	string-uri in .rodata pentru a evita scrierea in imagine sub forma de
+	cazuri (Precum scrierea pe rand a caracterelor '.', '-', '-', '.' pentru
+	caracterul P). Prin implementarea existenta, ma folosesc de o functie
+	folosita in mai multe task-uri 'write_message' si astfel o pot apela cu
+	adresa unui string din sectiunea de date.

@@ -1,0 +1,193 @@
+apply_key(img, key)
+	for (byte_id = 0 : height*(width - 1) + width)
+		xor img[byte_id], key
+
+		endfor
+
+find_word(img, word)
+	word_index = 0
+	
+	for_line (line = 0 : height)
+		for_col (column = 0 : width)
+			if (img[line][column] == word[word_index])
+				word_index++;
+				
+				if (word[word_index] == '\0')
+					line
+					jmp exit
+					
+				jmp endfor_col
+			
+			word_index = 0
+			endfor_col
+		endfor_line
+	
+	line = -1
+	
+	exit:
+	return line
+	
+
+bruteforce(img)
+	for (key = 0 : 127)
+		apply_key(img, key)
+		line = find_word(img, word)
+		apply_key(img, key)
+		
+		if (line != -1)
+			jmp exit
+			
+		endfor
+	
+	exit:
+	return [key, line]
+	
+	
+print_line(img, line)	
+	for (column = 0 : img[line][column] == '\0')
+		print(img[line][width])
+			
+		endfor
+		
+	
+task1
+	[key, line] = bruteforce(img)
+	
+	apply_key(img, key)
+	print_line(img, line)
+	apply_key(img, key)
+	
+	print(key)
+	print(line)
+	
+
+write_message(img, message, pixel)
+	for (index = 0 : message[index] == '\0')
+		img[pixel] = message[index]
+		
+		pixel++
+		endfor
+	
+	return pixel
+	
+	
+task2
+	[key, line] = bruteforce(img)
+	
+	apply_key(img, key)
+	write_message(img, message, (line + 1)*width)
+	
+	calc_key = calculate_key(key)
+	apply_key(img, calc_key)
+	
+	print_image(img, width, height)
+	
+	
+morse_encrypt(img, msg, byte_id)
+	first_word = 1
+
+	for (index = 0 : msg[index] == '\0')
+		morse_char = translate(msg[index])
+
+		if (!first_word)
+			new_byte_id = write_message(img, morse_space, byte_id)
+			byte_id = new_byte_id
+		
+		new_byte_id = write_message(img, morse_char, byte_id)
+		byte_id = new_byte_id
+
+		first_word = 0
+		
+		endfor
+		
+		
+task3
+	morse_encrypt(img, msg, byte_id - 1)
+	
+	print_image(img, width, height)
+	
+	
+lsb_encode(img, msg, byte_id)
+	for_index (index = 0 : msg[index] == '\0')
+		char = msg[index]
+
+		for_counter (counter = 1 : 8)
+			shl BYTE char
+
+			if (CF)
+				xor img[byte_id], BYTE 1
+				jmp not_set
+
+			and img[byte_id], BYTE !1
+
+			not_set:
+			byte_id += 8
+			endfor_counter
+
+		endfor_index
+
+
+task4
+	lsb_encode(img, msg, byte_id - 1)
+
+	print_image(img, width, height)
+
+
+lsb_decode(img, byte_id)
+	for ()
+		char = 0
+
+		for_counter (counter = 1 : 8)
+			byte = img[byte_id]
+			shr BYTE byte
+
+			if (CF)
+				char += 1
+			
+			shl BYTE char
+
+			byte_id += 8
+			endfor_counter
+
+		print(char)
+
+		if (char == 0)
+			jmp exit
+
+		endfor
+
+	exit:
+	nop
+
+
+task5
+	lsb_decode(img, byte_id - 1)
+
+
+blur(img)
+	for (line = 1 : height - 1)
+		for (column = 1 : width - 1)
+			sum = 0
+			sum += img[line][column]
+
+			sum += img[line][column - 1]
+			sum += img[line][column + 1]
+
+			sum += img[line - 1][column]
+			sum += img[line + 1][column]
+
+			avg = sum / 5
+
+			push avg
+
+			endfor
+		endfor
+
+	for (line = height - 1 : 1)
+		for (column = width - 1 : 1)
+			pop avg
+
+			img[line][column] = avg
+
+			endfor
+		endfor
